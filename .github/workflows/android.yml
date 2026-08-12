@@ -2,12 +2,13 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "**" ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -18,16 +19,43 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Accept Android SDK Licenses
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
       - name: Setup Gradle 8.4
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.4'
 
-      - name: Build Debug APK
-        run: gradle assembleDebug --stacktrace
+      - name: Prepare Build Environment & Keystore
+        run: |
+          # 1. إنشاء مفتاح التوقيع لتفادي أخطاء التوقيع المفقود
+          mkdir -p ~/.android
+          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000 || true
 
-      - name: Upload APK
+          # 2. البحث التلقائي عن مجلد المشروع الرئيسي (سواء في الجذر أو مجلد فرعي)
+          PROJECT_DIR=$(find . -maxdepth 3 -name "build.gradle" -o -name "build.gradle.kts" | head -n 1 | xargs dirname)
+          if [ -z "$PROJECT_DIR" ]; then PROJECT_DIR="."; fi
+          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+          echo "Project path set to: $PROJECT_DIR"
+
+          # 3. التأكد من وجود ملف gradlew وإنشائه إذا كان مفقوداً
+          cd "$PROJECT_DIR"
+          if [ ! -f "gradlew" ]; then
+            gradle wrapper --gradle-version 8.4
+          fi
+          chmod +x gradlew
+
+      - name: Build Debug APK
+        run: |
+          cd "${{ env.PROJECT_DIR }}"
+          export GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx3072m -XX:MaxMetaspaceSize=512m'"
+          ./gradlew assembleDebug --stacktrace --no-daemon || gradle assembleDebug --stacktrace --no-daemon
+
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: '**/build/outputs/apk/debug/*.apk'
+          path: '**/*.apk'
+          if-no-files-found: error
