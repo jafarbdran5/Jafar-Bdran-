@@ -1,0 +1,8 @@
+{
+  "name": "Remix JB Mark SVU",
+  "description": "SVU Grade Calculator - حاسبة المحصلة النهائية لطلاب الجامعة الافتراضية السورية",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

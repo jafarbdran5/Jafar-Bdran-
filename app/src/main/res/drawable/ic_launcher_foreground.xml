@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Center 66dp area is viewport 21 to 87 -->
+    <group android:translateX="0" android:translateY="0">
+        <!-- Graduation Cap & Grade Card -->
+        <!-- Cap Top Diamond -->
+        <path
+            android:fillColor="#F59E0B"
+            android:pathData="M54,28 L84,40 L54,52 L24,40 Z" />
+        <!-- Cap Base -->
+        <path
+            android:fillColor="#FBBF24"
+            android:pathData="M34,45.5 L34,57 C34,63 74,63 74,57 L74,45.5 L54,53.5 Z" />
+        <!-- Tassel -->
+        <path
+            android:fillColor="#14B8A6"
+            android:pathData="M78,41 L78,59 C78,61 80,61 80,59 L80,41 Z" />
+        <!-- Grade Calculator Card Outline -->
+        <path
+            android:fillColor="#38BDF8"
+            android:pathData="M32,65 C29.8,65 28,66.8 28,69 L28,83 C28,85.2 29.8,87 32,87 L76,87 C78.2,87 80,85.2 80,83 L80,69 C80,66.8 78.2,65 76,65 Z" />
+        <!-- Calculator buttons / Text lines -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M34,69 L74,69 L74,73 L34,73 Z M34,77 L52,77 L52,81 L34,81 Z M56,77 L74,77 L74,81 L56,81 Z" />
+    </group>
+</vector>
