@@ -3,7 +3,7 @@ workflows:
     name: Build Android APK
     max_build_duration: 60
     environment:
-      java: 21
+      java: 17
     scripts:
       - name: Set up Environment & Keystore
         script: |
@@ -11,20 +11,28 @@ workflows:
           keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000 || true
       - name: Locate Project & Build APK
         script: |
-          PROJ_DIR=$(find . -maxdepth 3 -name "build.gradle" -o -name "build.gradle.kts" | head -n 1 | xargs dirname)
-          if [ -z "$PROJ_DIR" ]; then PROJ_DIR="."; fi
+          # 1. البحث عن مجلد المشروع
+          PROJ_DIR=$(find . -maxdepth 4 -name "build.gradle" -o -name "build.gradle.kts" | head -n 1 | xargs dirname)
+          if [ -z "$PROJ_DIR" ]; then
+            echo "Error: No build.gradle found!"
+            exit 1
+          fi
           cd "$PROJ_DIR"
 
-          if [ -f gradle/wrapper/gradle-wrapper.properties ]; then
-            sed -i 's/gradle-.*-bin.zip/gradle-9.3.1-bin.zip/g' gradle/wrapper/gradle-wrapper.properties
+          # 2. تنزيل أداة gradlew تلقائياً إذا كانت مفقودة في GitHub
+          if [ ! -f "gradlew" ]; then
+            echo "Gradlew not found, generating wrapper..."
+            curl -sL "https://raw.githubusercontent.com/gradle/gradle/main/gradlew" -o gradlew
           fi
-
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
 
-          # نسخ ملف الـ APK إلى مجلد الجذر لضمان التقاطه
+          # 3. البناء
+          ./gradlew assembleDebug --stacktrace || gradle assembleDebug --stacktrace
+
+          # 4. تجميع الـ APK للتحميل
           mkdir -p $CM_BUILD_DIR/output_apk
           find . -name "*.apk" -exec cp {} $CM_BUILD_DIR/output_apk/ \;
     artifacts:
       - output_apk/*.apk
       - '**/build/outputs/apk/debug/*.apk'
+      
