@@ -11,25 +11,20 @@ workflows:
           keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000 || true
       - name: Locate Project & Build APK
         script: |
-          # 1. البحث التلقائي عن المجلد الذي يحتوي على كود الأندرويد
           PROJ_DIR=$(find . -maxdepth 3 -name "build.gradle" -o -name "build.gradle.kts" | head -n 1 | xargs dirname)
           if [ -z "$PROJ_DIR" ]; then PROJ_DIR="."; fi
           cd "$PROJ_DIR"
-          echo "Working directory: $(pwd)"
 
-          # 2. تحديث إصدار Gradle إذا كان ملف الإعدادات موجوداً
           if [ -f gradle/wrapper/gradle-wrapper.properties ]; then
             sed -i 's/gradle-.*-bin.zip/gradle-9.3.1-bin.zip/g' gradle/wrapper/gradle-wrapper.properties
           fi
 
-          # 3. منح الصلاحيات وتشغيل البناء
-          if [ -f "gradlew" ]; then
-            chmod +x gradlew
-            ./gradlew assembleDebug --stacktrace
-          else
-            echo "Gradlew not found, looking for gradlew in parent/child directories..."
-            find / -name gradlew 2>/dev/null | head -n 1
-          fi
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+
+          # نسخ ملف الـ APK إلى مجلد الجذر لضمان التقاطه
+          mkdir -p $CM_BUILD_DIR/output_apk
+          find . -name "*.apk" -exec cp {} $CM_BUILD_DIR/output_apk/ \;
     artifacts:
+      - output_apk/*.apk
       - '**/build/outputs/apk/debug/*.apk'
-      
